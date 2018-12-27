@@ -69,7 +69,13 @@ function upload_bottle {
     return 0
   fi
 
-  local deps=$(brew deps --1 "$1")
+  local deps=""
+  local bottled=$(brew info "$1" | grep -m 1 "(bottled)")
+  if [[ "$bottled" ]]; then
+    deps=$(brew deps --1 "$1")
+  else
+    deps=$(brew deps --1 --include-build "$1")
+  fi
   if [[ "$deps" ]]; then
     echo -n "$1 dependencies: "
     echo $deps
@@ -79,12 +85,12 @@ function upload_bottle {
     done <<< "$deps"
   fi
 
-  local bottled=$(brew info "$1" | grep -m 1 "(bottled)")
   if [[ "$outdated" ]]; then
     echo "$1 is installed but outdated."
     if [[ "$bottled" ]]; then
       if (not_shadowed "$1"); then
         echo "$1: Found bottle. Skipping."
+        brew upgrade "$1"
         return 0
       fi
     fi
@@ -94,6 +100,7 @@ function upload_bottle {
     if [[ "$bottled" ]]; then
       if (not_shadowed "$1"); then
         echo "$1: Found bottle. Skipping."
+        brew install "$@"
         return 0
       fi
     fi
