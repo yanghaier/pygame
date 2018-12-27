@@ -120,6 +120,7 @@ function upload_bottle {
   # Add the bottle info into the package's formula
   echo "brew bottle --merge --write $jsonfile"
   brew bottle --merge --write "$jsonfile"
+  brew bottle --root-url "$ROOT_URL"
 
   # Path to the cachefile will be updated now
   #local cachefile=$(brew --cache $1)
