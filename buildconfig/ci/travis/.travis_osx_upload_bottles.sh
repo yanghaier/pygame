@@ -90,17 +90,19 @@ function upload_bottle {
     if [[ "$bottled" ]]; then
       if (not_shadowed "$1"); then
         echo "$1: Found bottle. Skipping."
-        brew upgrade "$1"
+        #brew upgrade "$1" # the tap is not used
+        retry brew uninstall --ignore-dependencies "$1"
+        retry brew install "$@"
         return 0
       fi
     fi
-    brew uninstall --ignore-dependencies "$@"
+    retry brew uninstall --ignore-dependencies "$1"
   else
     echo "$1 is not installed."
     if [[ "$bottled" ]]; then
       if (not_shadowed "$1"); then
         echo "$1: Found bottle. Skipping."
-        brew install "$@"
+        retry brew install "$@"
         return 0
       fi
     fi
@@ -113,14 +115,14 @@ function upload_bottle {
   # TODO: ^ first line in stdout is the bottle file
   # use instead of file cmd. json file has a similar name. "| head -n 1"?
   local jsonfile=$(find . -name $1*.bottle.json)
-  brew uninstall --ignore-dependencies "$@"
+  retry brew uninstall --ignore-dependencies "$1"
   local bottlefile=$(find . -name $1*.tar.gz)
-  brew install "$bottlefile" # can this be removed?
+  retry brew install "$bottlefile" # can this be removed?
 
   # Add the bottle info into the package's formula
   echo "brew bottle --merge --write $jsonfile"
-  brew bottle --merge --write "$jsonfile"
   brew bottle --root-url "$ROOT_URL"
+  brew bottle --merge --write "$jsonfile"
 
   # Path to the cachefile will be updated now
   #local cachefile=$(brew --cache $1)
